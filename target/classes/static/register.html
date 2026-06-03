@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart — Create Account</title>
+    <meta name="description" content="Register on SwiftCart — your fresh grocery store">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .auth-container { width: 100%; max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+        .auth-left {
+            background: linear-gradient(145deg, #0f2010 0%, var(--primary-dark) 40%, var(--primary) 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; position: relative; overflow: hidden;
+        }
+        .auth-left::before { content: ''; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px; border-radius: 50%; background: rgba(255,255,255,0.05); }
+        .auth-left-content { position: relative; z-index: 1; color: white; width: 100%; }
+        .auth-logo { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+        .auth-logo .logo-icon { width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .auth-logo .logo-text { font-family: var(--font-heading); font-weight: 800; font-size: 1.6rem; }
+        .auth-logo .logo-text span { color: #FFE082; }
+        .auth-left h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .auth-left p { color: rgba(255,255,255,0.7); font-size: 0.9rem; line-height: 1.7; margin-bottom: 2rem; }
+        .steps { display: flex; flex-direction: column; gap: 1.125rem; }
+        .step { display: flex; align-items: flex-start; gap: 1rem; }
+        .step-num { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; flex-shrink: 0; color: #FFE082; }
+        .step-detail h4 { font-size: 0.9rem; font-weight: 600; color: white; }
+        .step-detail p { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+        .auth-right { background: white; display: flex; align-items: center; justify-content: center; padding: 3rem; overflow-y: auto; }
+        .auth-form-wrapper { width: 100%; max-width: 420px; }
+        .auth-heading h1 { font-size: 1.6rem; font-weight: 700; }
+        .auth-heading p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+        .auth-form { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .auth-footer { text-align: center; font-size: 0.875rem; color: var(--text-muted); margin-top: 1.25rem; }
+        .auth-footer a { color: var(--primary); font-weight: 600; }
+        .field-error { color: var(--error); font-size: 0.8rem; display: none; align-items: center; gap: 0.25rem; margin-top: 2px; }
+        .terms-check { display: flex; align-items: flex-start; gap: 0.625rem; font-size: 0.8125rem; color: var(--text-secondary); }
+        .terms-check input { margin-top: 2px; accent-color: var(--primary); }
+        .terms-check a { color: var(--primary); }
+        @media (max-width: 768px) { .auth-container { grid-template-columns: 1fr; } .auth-left { display: none; } .auth-right { padding: 2rem 1.5rem; } .form-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="auth-container">
+    <div class="auth-left">
+        <div class="auth-left-content">
+            <div class="auth-logo">
+                <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
+                <div class="logo-text">Swift<span>Cart</span></div>
+            </div>
+            <h2>Join 50,000+ Happy Customers</h2>
+            <p>Get access to fresh groceries, exclusive deals, and lightning-fast delivery.</p>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-detail">
+                        <h4>Create your account</h4>
+                        <p>Quick sign up — takes less than a minute</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-detail">
+                        <h4>Browse & add to cart</h4>
+                        <p>1000+ fresh products at your fingertips</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-detail">
+                        <h4>Delivered to your door</h4>
+                        <p>Same-day delivery available in select areas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="auth-right">
+        <div class="auth-form-wrapper">
+            <div class="auth-heading">
+                <h1>Create Account</h1>
+                <p>Start your SwiftCart shopping journey today</p>
+            </div>
+            <form class="auth-form" id="register-form" onsubmit="handleRegister(event)" novalidate>
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name <span>*</span></label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="name" class="form-control" placeholder="John Doe" autocomplete="name" required>
+                    </div>
+                    <div class="field-error" id="name-error"><i class="fa-solid fa-circle-exclamation"></i><span></span></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address <span>*</span></label>
+                    <div class="input-group">
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                        <input type="email" id="email" class="form-control" placeholder="you@example.com" autocomplete="email" required>
+                    </div>
+                    <div class="field-error" id="email-error"><i class="fa-solid fa-circle-exclamation"></i><span></span></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-phone input-icon"></i>
+                        <input type="tel" id="phone" class="form-control" placeholder="10-digit mobile number" autocomplete="tel">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password <span>*</span></label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="password" class="form-control" placeholder="Min. 6 characters" required>
+                            <i class="fa-solid fa-eye input-icon-right" onclick="togglePassword('password','pw-icon')" id="pw-icon" style="cursor:pointer"></i>
+                        </div>
+                        <div class="field-error" id="password-error"><i class="fa-solid fa-circle-exclamation"></i><span></span></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="confirm-password">Confirm <span>*</span></label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="confirm-password" class="form-control" placeholder="Repeat password" required>
+                        </div>
+                        <div class="field-error" id="confirm-password-error"><i class="fa-solid fa-circle-exclamation"></i><span></span></div>
+                    </div>
+                </div>
+                <div class="terms-check">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="register-btn">
+                    Create Account <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+            <div class="auth-footer">
+                Already have an account? <a href="/login.html">Sign in</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+    if (isLoggedIn()) window.location.href = '/index.html';
+</script>
+</body>
+</html>

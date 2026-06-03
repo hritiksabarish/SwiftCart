@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwiftCart - Fresh Groceries Delivered Fast</title>
+  <meta name="description" content="Shop fresh fruits, vegetables, dairy, bakery and more at SwiftCart. Free delivery on your first order.">
+
+  <!-- Google Fonts — MUST be first -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ── Announcement Bar ───────────────────────────────────────────────────── -->
+<div class="announcement-bar">
+  🚚 Free delivery on your first order! Use code <strong>SWIFT50</strong> for 50% off.
+  <a href="/products.html"> Shop now →</a>
+</div>
+
+<!-- ── Navbar via JS injection ───────────────────────────────────────────── -->
+<div id="navbar-placeholder"></div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     HERO SECTION
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="hero-wrapper">
+  <div class="container">
+    <section class="hero animate-fade-in-up">
+      <div class="hero-content">
+
+        <div class="hero-label">
+          <i class="fa-solid fa-bolt"></i> Free delivery on first order
+        </div>
+
+        <h1>
+          Fresh Groceries,<br>
+          <span>Delivered Swift</span>
+        </h1>
+
+        <p>
+          Shop 1000+ fresh products. Farm-direct quality, unbeatable
+          prices — at your door in 2 hours.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/products.html" class="hero-btn-primary">
+            <i class="fa-solid fa-cart-shopping"></i> Shop Now
+          </a>
+          <a href="/products.html?featured=true" class="hero-btn-outline">
+            <i class="fa-solid fa-tag"></i> Today's Deals
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <span class="hero-stat"><i class="fa-solid fa-truck-fast"></i> 2-hour delivery</span>
+          <span class="hero-stat"><i class="fa-solid fa-shield-halved"></i> 100% Safe</span>
+          <span class="hero-stat"><i class="fa-solid fa-leaf"></i> Organic Certified</span>
+        </div>
+
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     CATEGORIES
+     ══════════════════════════════════════════════════════════════════════════ -->
+<section class="categories-section">
+  <div class="container">
+
+    <div class="section-header">
+      <h2 class="section-heading">
+        <span class="heading-bar"></span>
+        Shop by Category
+      </h2>
+      <a href="/products.html" class="btn btn-ghost btn-sm">
+        View All <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <!-- id="categories-grid" is targeted by both JS (getElementById) and CSS -->
+    <div class="category-grid" id="categories-grid">
+      <!-- Skeleton placeholders -->
+      <div class="skeleton" style="height:130px;border-radius:16px"></div>
+      <div class="skeleton" style="height:130px;border-radius:16px"></div>
+      <div class="skeleton" style="height:130px;border-radius:16px"></div>
+      <div class="skeleton" style="height:130px;border-radius:16px"></div>
+      <div class="skeleton" style="height:130px;border-radius:16px"></div>
+      <div class="skeleton" style="height:130px;border-radius:16px"></div>
+      <div class="skeleton" style="height:130px;border-radius:16px"></div>
+      <div class="skeleton" style="height:130px;border-radius:16px"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     FEATURED DEALS CAROUSEL
+     ══════════════════════════════════════════════════════════════════════════ -->
+<section class="featured-section">
+  <div class="container">
+
+    <div class="section-header">
+      <h2 class="section-heading">
+        <span class="heading-bar"></span>
+        🔥 Featured Deals
+      </h2>
+      <div class="carousel-nav">
+        <button class="carousel-btn" onclick="scrollCarousel(-1)" aria-label="Previous">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button class="carousel-btn" onclick="scrollCarousel(1)" aria-label="Next">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="carousel-wrapper">
+      <!-- id="featured-carousel" is targeted by CSS with display:flex -->
+      <div id="featured-carousel" class="carousel-track"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Promo Banners -->
+<section class="promo-section">
+  <div class="container">
+    <div class="promo-grid">
+      <div class="promo-card green">
+        <h3>🌿 Organic Specials</h3>
+        <p>Up to 30% off on certified organic products every week</p>
+        <a href="/products.html" class="promo-btn">Shop Organic →</a>
+      </div>
+      <div class="promo-card orange">
+        <h3>⚡ Flash Sale Today</h3>
+        <p>Limited-time deals ending at midnight tonight!</p>
+        <a href="/products.html?featured=true" class="promo-btn">See Deals →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     NEW ARRIVALS GRID
+     ══════════════════════════════════════════════════════════════════════════ -->
+<section class="arrivals-section">
+  <div class="container">
+
+    <div class="section-header">
+      <h2 class="section-heading">
+        <span class="heading-bar"></span>
+        New Arrivals
+      </h2>
+      <a href="/products.html" class="btn btn-outline btn-sm">
+        View All <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <!-- id="new-arrivals-grid" + class="products-grid" — both targeted by CSS -->
+    <div class="products-grid" id="new-arrivals-grid"></div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     WHY SWIFTCART
+     ══════════════════════════════════════════════════════════════════════════ -->
+<section class="features-section">
+  <div class="container">
+
+    <h2 class="section-heading" style="justify-content:center;">
+      <span class="heading-bar"></span>
+      Why Choose SwiftCart?
+    </h2>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon-circle">
+          <i class="fa-solid fa-truck-fast" style="color:#1565C0"></i>
+        </div>
+        <div class="feature-title">Fast Delivery</div>
+        <div class="feature-desc">Same-day delivery in 2 hours for orders placed before 5 PM, 7 days a week.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-circle">
+          <i class="fa-solid fa-heart-pulse" style="color:#2E7D32"></i>
+        </div>
+        <div class="feature-title">Fresh Quality</div>
+        <div class="feature-desc">Farm-to-door freshness guaranteed or your money back. We source direct from farmers.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-circle">
+          <i class="fa-solid fa-shield-halved" style="color:#6A1B9A"></i>
+        </div>
+        <div class="feature-title">100% Secure</div>
+        <div class="feature-desc">End-to-end encrypted payments with Cash on Delivery option at checkout.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-circle">
+          <i class="fa-solid fa-tags" style="color:#E65100"></i>
+        </div>
+        <div class="feature-title">Best Prices</div>
+        <div class="feature-desc">Price-match guarantee — we beat any local market price. Weekly deals every Friday.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Footer via JS builder ───────────────────────────────────────────────── -->
+<div id="footer-placeholder"></div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ── Scripts ─────────────────────────────────────────────────────────────── -->
+<script src="/js/api.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CATEGORY DATA & RENDERING
+   ═══════════════════════════════════════════════════════════════ */
+const FALLBACK_CATEGORIES = [
+  { id:1,  name:'Fruits & Veg',    emoji:'🥦', bg:'#E8F5E9' },
+  { id:2,  name:'Dairy & Eggs',    emoji:'🥛', bg:'#FFF8E1' },
+  { id:3,  name:'Bakery',          emoji:'🍞', bg:'#FFF3E0' },
+  { id:4,  name:'Beverages',       emoji:'🥤', bg:'#E3F2FD' },
+  { id:5,  name:'Snacks & Chips',  emoji:'🍿', bg:'#FCE4EC' },
+  { id:6,  name:'Household',       emoji:'🧹', bg:'#F3E5F5' },
+  { id:7,  name:'Personal Care',   emoji:'✨', bg:'#E8EAF6' },
+  { id:8,  name:'Meat & Seafood',  emoji:'🐟', bg:'#FFEBEE' },
+];
+const CAT_COLORS = ['#E8F5E9','#FFF8E1','#FFF3E0','#E3F2FD','#FCE4EC','#F3E5F5','#E8EAF6','#FFEBEE'];
+const CAT_EMOJIS = {
+  'Fruits & Vegetables':'🥦', 'Dairy & Eggs':'🥛', 'Bakery':'🍞',
+  'Beverages':'🥤', 'Snacks & Chips':'🍿', 'Household':'🧹',
+  'Personal Care':'✨', 'Meat & Seafood':'🐟'
+};
+
+function catCard(id, name, emoji, bg) {
+  return `
+  <a href="/products.html?category=${id}" class="category-card animate-fade-in">
+    <div class="category-icon-circle" style="background:${bg}">${emoji}</div>
+    <div class="category-name">${name}</div>
+  </a>`;
+}
+
+async function loadCategories() {
+  const grid = document.getElementById('categories-grid');
+  try {
+    const res = await api.get('/categories');
+    const cats = Array.isArray(res) ? res : (res.data || res.content || []);
+    if (!cats.length) throw new Error('empty');
+    grid.innerHTML = cats.map((c, i) =>
+      catCard(c.id, c.name, CAT_EMOJIS[c.name] || '🛒', CAT_COLORS[i % CAT_COLORS.length])
+    ).join('');
+  } catch (_) {
+    grid.innerHTML = FALLBACK_CATEGORIES.map(c =>
+      catCard(c.id, c.name, c.emoji, c.bg)
+    ).join('');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PRODUCT CARD BUILDER — exact structure for all CSS classes
+   ═══════════════════════════════════════════════════════════════ */
+function renderProductCard(product) {
+  const discount = product.price && product.discountPrice
+    ? Math.round((1 - product.discountPrice / product.price) * 100)
+    : 0;
+  const imgSrc = product.imageUrl ||
+    `https://placehold.co/300x300/e8f5e9/2E7D32?text=${encodeURIComponent(product.name || 'Product')}`;
+  const ep = parseFloat(product.discountPrice || product.price || 0);
+  const op = parseFloat(product.price || 0);
+  const inStock = (product.stockQuantity == null) ? true : product.stockQuantity > 0;
+  const rating = product.averageRating || product.rating || 4;
+  const reviewCount = product.reviewCount || 0;
+
+  return `
+    <div class="product-card">
+      <div class="product-card-image">
+        <img src="${imgSrc}" alt="${product.name || ''}"
+             loading="lazy"
+             onerror="this.parentElement.innerHTML='<span>${product.name || ''}</span>'">
+        ${discount > 0 ? `<span class="discount-badge">${discount}% OFF</span>` : ''}
+        <button class="wishlist-btn" onclick="toggleWishlist(${product.id}, this)" title="Wishlist">
+          <i class="fa-regular fa-heart"></i>
+        </button>
+      </div>
+      <div class="product-card-body">
+        <div class="product-brand">${product.brand || ''}</div>
+        <a href="/product-detail.html?id=${product.id}" class="product-name">${product.name || ''}</a>
+        ${product.unit ? `<div class="product-unit">${product.unit}</div>` : ''}
+        <div class="product-rating">
+          <span class="stars" style="color:#FFC107">${'★'.repeat(Math.round(rating))}${'☆'.repeat(5 - Math.round(rating))}</span>
+          <span>(${reviewCount})</span>
+        </div>
+        <div class="product-price-row">
+          <span class="price-current">₹${ep.toFixed(2)}</span>
+          ${discount > 0 ? `<span class="price-original">₹${op.toFixed(2)}</span>` : ''}
+        </div>
+      </div>
+      <div class="product-card-footer">
+        ${inStock
+          ? `<button class="add-to-cart-btn" id="cart-btn-${product.id}" onclick="addToCart(${product.id}, this)">
+               <i class="fa-solid fa-cart-plus"></i> Add to Cart
+             </button>`
+          : `<div class="out-of-stock-badge"><i class="fa-solid fa-clock"></i> Out of Stock</div>`
+        }
+      </div>
+    </div>`;
+}
+
+/* Alias — keep backward compat with buildProductCard calls */
+function buildProductCard(p, isCarousel) {
+  return renderProductCard(p);
+}
+
+/* Fallback products when API is unreachable */
+const FALLBACK_PRODUCTS = [
+  { id:1,  name:'Fresh Bananas',   brand:'FarmFresh',       unit:'dozen',    price:49,  discountPrice:39,  stockQuantity:100, averageRating:4.2, reviewCount:24 },
+  { id:2,  name:'Red Apples',      brand:'Himalayan',       unit:'kg',       price:180, discountPrice:149, stockQuantity:80,  averageRating:4.5, reviewCount:18 },
+  { id:3,  name:'Full Cream Milk', brand:'Amul',            unit:'litre',    price:68,  discountPrice:65,  stockQuantity:300, averageRating:4.8, reviewCount:53 },
+  { id:4,  name:'Orange Juice',    brand:'Tropicana',       unit:'litre',    price:120, discountPrice:99,  stockQuantity:80,  averageRating:4.3, reviewCount:31 },
+  { id:5,  name:'Potato Chips',    brand:'Lays',            unit:'100g',     price:30,  discountPrice:28,  stockQuantity:250, averageRating:4.0, reviewCount:67 },
+  { id:6,  name:'Dark Chocolate',  brand:'Bournville',      unit:'80g bar',  price:150, discountPrice:129, stockQuantity:100, averageRating:4.7, reviewCount:42 },
+  { id:7,  name:'Shampoo',         brand:'Head & Shoulders',unit:'340ml',    price:299, discountPrice:249, stockQuantity:100, averageRating:4.4, reviewCount:29 },
+  { id:8,  name:'Chicken Breast',  brand:'FreshMeat',       unit:'500g',     price:199, discountPrice:179, stockQuantity:60,  averageRating:4.6, reviewCount:15 },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURED DEALS CAROUSEL
+   ═══════════════════════════════════════════════════════════════ */
+async function loadFeatured() {
+  const track = document.getElementById('featured-carousel');
+  try {
+    const res = await api.get('/products?size=8&sortBy=createdAt&sortDir=desc');
+    const raw = Array.isArray(res) ? res : (res.content || res.data?.content || []);
+    if (!raw.length) throw new Error('empty');
+    track.innerHTML = raw.map(p => renderProductCard(p)).join('');
+  } catch (_) {
+    track.innerHTML = FALLBACK_PRODUCTS.slice(0,6).map(p => renderProductCard(p)).join('');
+  }
+}
+
+function scrollCarousel(direction) {
+  const track = document.getElementById('featured-carousel');
+  if (track) track.scrollBy({ left: direction * 240, behavior: 'smooth' });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW ARRIVALS GRID
+   ═══════════════════════════════════════════════════════════════ */
+async function loadNewArrivals() {
+  const grid = document.getElementById('new-arrivals-grid');
+  try {
+    const res = await api.get('/products?sortBy=createdAt&sortDir=desc&size=8');
+    const raw = Array.isArray(res) ? res : (res.content || res.data?.content || []);
+    if (!raw.length) throw new Error('empty');
+    grid.innerHTML = raw.map(p => renderProductCard(p)).join('');
+  } catch (_) {
+    grid.innerHTML = FALLBACK_PRODUCTS.map(p => renderProductCard(p)).join('');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CART & WISHLIST ACTIONS
+   ═══════════════════════════════════════════════════════════════ */
+async function addToCart(productId, btn) {
+  if (!isLoggedIn()) {
+    sessionStorage.setItem('redirectAfterLogin', window.location.href);
+    window.location.href = '/login.html';
+    return;
+  }
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner spinner-sm" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.4);border-top-color:white"></span> Adding…';
+  btn.disabled = true;
+  try {
+    await api.post('/cart/add', { productId, quantity: 1 });
+    showToast('Added to cart!', 'success');
+    updateCartBadge();
+  } catch (e) {
+    showToast(e.message || 'Could not add to cart', 'error');
+  } finally {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+}
+
+async function toggleWishlist(productId, btn) {
+  if (!isLoggedIn()) { window.location.href = '/login.html'; return; }
+  const active = btn.classList.contains('active');
+  try {
+    if (active) {
+      await api.delete('/wishlist/' + productId);
+      btn.classList.remove('active');
+      btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+      showToast('Removed from wishlist', 'info');
+    } else {
+      await api.post('/wishlist/' + productId);
+      btn.classList.add('active');
+      btn.innerHTML = '<i class="fa-solid fa-heart" style="color:#e53935"></i>';
+      showToast('Added to wishlist!', 'success');
+    }
+  } catch (e) { showToast(e.message || 'Error', 'error'); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════ */
+(async function init() {
+  await Promise.all([
+    loadCategories(),
+    loadFeatured(),
+    loadNewArrivals(),
+  ]);
+})();
+</script>
+
+</body>
+</html>

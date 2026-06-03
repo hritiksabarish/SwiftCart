@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart — My Orders</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<div class="dashboard-layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+                <div class="sidebar-user-info"><h4 id="sidebar-name">...</h4><span>Customer</span></div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/customer/dashboard.html" class="sidebar-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+            <a href="/customer/orders.html" class="sidebar-link active" style="position:relative"><i class="fa-solid fa-box-open"></i> My Orders</a>
+            <a href="/customer/wishlist.html" class="sidebar-link"><i class="fa-regular fa-heart"></i> Wishlist</a>
+            <a href="/customer/profile.html" class="sidebar-link"><i class="fa-solid fa-user"></i> Profile</a>
+            <a href="/customer/addresses.html" class="sidebar-link"><i class="fa-solid fa-location-dot"></i> Addresses</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/products.html" class="sidebar-link"><i class="fa-solid fa-store"></i> Browse Store</a>
+            <div class="sidebar-link danger" onclick="logout()" style="cursor:pointer"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="page-header">
+            <h1>My Orders</h1>
+            <p>Track and manage your purchases</p>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs" style="margin-bottom:1.5rem">
+            <button class="filter-tab active" onclick="filterOrders('ALL', this)">All</button>
+            <button class="filter-tab" onclick="filterOrders('PENDING', this)">Pending</button>
+            <button class="filter-tab" onclick="filterOrders('CONFIRMED', this)">Confirmed</button>
+            <button class="filter-tab" onclick="filterOrders('PROCESSING', this)">Processing</button>
+            <button class="filter-tab" onclick="filterOrders('SHIPPED', this)">Shipped</button>
+            <button class="filter-tab" onclick="filterOrders('DELIVERED', this)">Delivered</button>
+            <button class="filter-tab" onclick="filterOrders('CANCELLED', this)">Cancelled</button>
+        </div>
+
+        <div id="orders-list"></div>
+        <div id="orders-pagination" class="pagination"></div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireCustomer();
+const user = getUserInfo();
+document.getElementById('sidebar-name').textContent = user?.name || 'Customer';
+document.getElementById('sidebar-avatar').textContent = (user?.name || 'C')[0].toUpperCase();
+
+let currentFilter = 'ALL';
+let currentPage = 0;
+let totalPages = 0;
+
+async function loadOrders() {
+    document.getElementById('orders-list').innerHTML = `<div class="page-loading"><div class="spinner spinner-green"></div></div>`;
+    try {
+        const res = await api.get(`/orders?page=${currentPage}&size=10`);
+        const data = res.data;
+        totalPages = data.totalPages;
+        let orders = data.content || [];
+        if (currentFilter !== 'ALL') orders = orders.filter(o => o.orderStatus === currentFilter);
+        renderOrders(orders);
+        renderPagination();
+    } catch(e) {
+        document.getElementById('orders-list').innerHTML = `<p class="text-muted">Error: ${e.message}</p>`;
+    }
+}
+
+function renderOrders(orders) {
+    const container = document.getElementById('orders-list');
+    if (!orders.length) {
+        container.innerHTML = `<div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-box-open"></i></div>
+            <h3>No orders found</h3>
+            <p>Your order history will appear here</p>
+            <a href="/products.html" class="btn btn-primary btn-sm" style="margin-top:0.5rem">Start Shopping</a>
+        </div>`;
+        return;
+    }
+    container.innerHTML = orders.map(o => `
+    <div class="card animate-fade-in" style="padding:1.25rem;margin-bottom:0.875rem">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
+            <div>
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.375rem">
+                    <span style="font-weight:700;color:var(--primary)">Order #${o.id}</span>
+                    ${getStatusBadge(o.orderStatus)}
+                </div>
+                <div style="font-size:0.8rem;color:var(--text-muted)">${formatDateTime(o.createdAt)}</div>
+            </div>
+            <div style="text-align:right">
+                <div style="font-family:var(--font-heading);font-weight:800;font-size:1.2rem;color:var(--text-primary)">₹${parseFloat(o.finalAmount).toFixed(2)}</div>
+                <div style="font-size:0.75rem;color:var(--text-muted)">${o.orderItems?.length || 0} item${(o.orderItems?.length||0)===1?'':'s'} • ${o.paymentMethod?.replace('_',' ')||'COD'}</div>
+            </div>
+        </div>
+        <div style="margin-top:0.875rem;padding-top:0.875rem;border-top:1px solid var(--divider);display:flex;gap:0.5rem;flex-wrap:wrap">
+            <a href="/customer/order-detail.html?id=${o.id}" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-eye"></i> View Details
+            </a>
+            ${o.orderStatus === 'PENDING' ? `<button class="btn btn-sm" style="background:#ffebee;color:var(--error);border:1px solid #ffcdd2" onclick="cancelOrder(${o.id}, this)">
+                <i class="fa-solid fa-xmark"></i> Cancel
+            </button>` : ''}
+        </div>
+    </div>`).join('');
+}
+
+function renderPagination() {
+    const container = document.getElementById('orders-pagination');
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+    let html = `<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage===0?'disabled':''}>
+        <i class="fa-solid fa-chevron-left"></i></button>`;
+    for (let i = 0; i < totalPages; i++) {
+        html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goToPage(${i})">${i+1}</button>`;
+    }
+    html += `<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage===totalPages-1?'disabled':''}>
+        <i class="fa-solid fa-chevron-right"></i></button>`;
+    container.innerHTML = html;
+}
+
+function goToPage(page) {
+    if (page < 0 || page >= totalPages) return;
+    currentPage = page;
+    loadOrders();
+}
+
+function filterOrders(status, btn) {
+    currentFilter = status;
+    currentPage = 0;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    loadOrders();
+}
+
+async function cancelOrder(orderId, btn) {
+    if (!confirm('Cancel this order?')) return;
+    btn.disabled = true; btn.textContent = 'Cancelling...';
+    try {
+        await api.put(`/orders/${orderId}/cancel`);
+        showToast('Order cancelled', 'info');
+        loadOrders();
+    } catch(e) { showToast(e.message, 'error'); btn.disabled = false; btn.textContent = 'Cancel'; }
+}
+
+loadOrders();
+</script>
+</body>
+</html>

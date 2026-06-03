@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart — Checkout</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .checkout-layout { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; padding: 2rem 0 3rem; }
+        .step-indicator { display: flex; align-items: center; gap: 0; margin-bottom: 2rem; }
+        .step-item { display: flex; align-items: center; gap: 0.5rem; flex: 1; }
+        .step-bubble { width: 36px; height: 36px; border-radius: 50%; background: var(--divider); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; transition: var(--transition); border: 2px solid transparent; }
+        .step-bubble.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .step-bubble.done { background: var(--primary-50); color: var(--primary); border-color: var(--primary-light); }
+        .step-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+        .step-label.active { color: var(--primary); }
+        .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 0.5rem; transition: background 0.3s; }
+        .step-line.done { background: var(--primary-light); }
+        .checkout-card { background: white; border-radius: var(--radius-md); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.25rem; }
+        .checkout-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.625rem; }
+        .cod-badge { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: white; border-radius: var(--radius-md); padding: 1.5rem; text-align: center; }
+        .success-screen { text-align: center; padding: 3rem 1rem; }
+        .success-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--primary-50); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2.5rem; animation: bounceIn 0.5s cubic-bezier(0.68,-0.55,0.27,1.55); }
+        @keyframes bounceIn { from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1} }
+        @media(max-width:968px) { .checkout-layout { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<div class="page-wrapper">
+    <div class="container">
+        <h1 style="margin:1.25rem 0 0;font-size:1.5rem;font-weight:700">
+            <i class="fa-solid fa-lock" style="color:var(--primary);margin-right:0.5rem"></i> Secure Checkout
+        </h1>
+
+        <!-- Step Indicators -->
+        <div class="step-indicator" style="margin-top:1.5rem">
+            <div class="step-item">
+                <div class="step-bubble active" id="step-1-indicator">1</div>
+                <span class="step-label active">Delivery Address</span>
+            </div>
+            <div class="step-line" id="step-1-line"></div>
+            <div class="step-item">
+                <div class="step-bubble" id="step-2-indicator">2</div>
+                <span class="step-label">Order Review</span>
+            </div>
+            <div class="step-line" id="step-2-line"></div>
+            <div class="step-item">
+                <div class="step-bubble" id="step-3-indicator">3</div>
+                <span class="step-label">Payment</span>
+            </div>
+        </div>
+
+        <div class="checkout-layout">
+            <div>
+                <!-- Order Success Screen (hidden initially) -->
+                <div id="order-success" class="card hidden" style="padding:3rem 2rem">
+                    <div class="success-screen">
+                        <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+                        <h2 style="font-weight:800;margin-bottom:0.5rem">🎉 Order Placed Successfully!</h2>
+                        <p style="color:var(--text-muted);margin-bottom:1.5rem">Your groceries are being prepared</p>
+                        <div style="background:var(--bg);padding:1.25rem;border-radius:var(--radius);margin-bottom:1.5rem">
+                            <div style="font-size:0.875rem;color:var(--text-muted);margin-bottom:0.25rem">Order ID</div>
+                            <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:800;color:var(--primary)" id="success-order-id"></div>
+                        </div>
+                        <div style="background:var(--primary-50);padding:1rem;border-radius:var(--radius);margin-bottom:2rem">
+                            <div style="font-size:0.875rem;color:var(--text-secondary)">Estimated Delivery</div>
+                            <div style="font-weight:700;color:var(--primary)" id="success-delivery"></div>
+                        </div>
+                        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+                            <a href="/customer/orders.html" class="btn btn-primary">
+                                <i class="fa-solid fa-box"></i> Track My Order
+                            </a>
+                            <a href="/products.html" class="btn btn-outline">Continue Shopping</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checkout Steps -->
+                <div id="checkout-steps">
+                    <!-- Step 1: Address -->
+                    <div id="step-1-content">
+                        <div class="checkout-card">
+                            <h3><i class="fa-solid fa-location-dot" style="color:var(--primary)"></i> Delivery Address</h3>
+                            <div id="saved-addresses"></div>
+                            <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem" onclick="document.getElementById('add-address-form').classList.toggle('hidden')">
+                                <i class="fa-solid fa-plus"></i> Add New Address
+                            </button>
+                        </div>
+
+                        <!-- Add Address Form -->
+                        <div class="checkout-card hidden" id="add-address-form">
+                            <h3><i class="fa-solid fa-map-marker-alt" style="color:var(--primary)"></i> New Address</h3>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                                <div class="form-group">
+                                    <label class="form-label">Label</label>
+                                    <select class="form-control" id="as-label">
+                                        <option value="Home">🏠 Home</option>
+                                        <option value="Work">🏢 Work</option>
+                                        <option value="Other">📍 Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Pincode <span>*</span></label>
+                                    <input type="text" class="form-control" id="as-pincode" placeholder="6-digit pincode" maxlength="6">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top:1rem">
+                                <label class="form-label">Street Address <span>*</span></label>
+                                <input type="text" class="form-control" id="as-street" placeholder="House/Flat no., Building, Street">
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
+                                <div class="form-group">
+                                    <label class="form-label">City <span>*</span></label>
+                                    <input type="text" class="form-control" id="as-city" placeholder="City">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">State <span>*</span></label>
+                                    <input type="text" class="form-control" id="as-state" placeholder="State">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top:1rem">
+                                <label class="form-label">Landmark (Optional)</label>
+                                <input type="text" class="form-control" id="as-landmark" placeholder="Near bus stop, school, etc.">
+                            </div>
+                            <!-- Map placeholder -->
+                            <div style="background:var(--bg);border:2px dashed var(--border);border-radius:var(--radius);height:120px;display:flex;align-items:center;justify-content:center;margin-top:1rem;color:var(--text-muted);font-size:0.875rem;gap:0.5rem;margin-bottom:1rem">
+                                <i class="fa-solid fa-map-location-dot"></i> Map view placeholder
+                            </div>
+                            <button class="btn btn-primary" id="save-addr-btn" onclick="saveNewAddress()">
+                                <i class="fa-solid fa-save"></i> Save Address
+                            </button>
+                        </div>
+
+                        <button class="btn btn-primary btn-lg" onclick="nextStep()" style="width:fit-content">
+                            Continue to Review <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Order Review -->
+                    <div id="step-2-content" class="hidden">
+                        <div class="checkout-card">
+                            <h3><i class="fa-solid fa-clipboard-list" style="color:var(--primary)"></i> Order Items</h3>
+                            <div id="order-items-review"></div>
+                        </div>
+                        <div class="checkout-card">
+                            <h3><i class="fa-solid fa-clock" style="color:var(--primary)"></i> Estimated Delivery</h3>
+                            <div style="background:var(--primary-50);padding:1rem;border-radius:var(--radius);font-weight:600;color:var(--primary)">
+                                <i class="fa-solid fa-truck-fast"></i> <span id="delivery-time"></span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:1.25rem">
+                            <label class="form-label">Delivery Instructions (Optional)</label>
+                            <textarea class="form-control" id="delivery-instructions" placeholder="Leave at door, ring bell twice, etc." style="height:80px"></textarea>
+                        </div>
+                        <div style="display:flex;gap:0.75rem">
+                            <button class="btn btn-ghost" onclick="prevStep()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                            <button class="btn btn-primary btn-lg" onclick="nextStep()">
+                                Continue to Payment <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Payment -->
+                    <div id="step-3-content" class="hidden">
+                        <div class="checkout-card">
+                            <h3><i class="fa-solid fa-wallet" style="color:var(--primary)"></i> Payment Method</h3>
+                            <div class="cod-badge" style="margin-bottom:1rem">
+                                <div style="font-size:2rem;margin-bottom:0.5rem">💵</div>
+                                <h3 style="color:white;font-size:1.25rem;font-weight:700">Cash on Delivery</h3>
+                                <p style="color:rgba(255,255,255,0.8);font-size:0.875rem;margin-top:0.5rem">Pay with cash when your groceries arrive at your doorstep. No minimum order required.</p>
+                                <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:1rem">
+                                    <span style="background:rgba(255,255,255,0.15);padding:0.25rem 0.75rem;border-radius:var(--radius-full);font-size:0.8rem;color:white"><i class="fa-solid fa-check"></i> No extra charges</span>
+                                    <span style="background:rgba(255,255,255,0.15);padding:0.25rem 0.75rem;border-radius:var(--radius-full);font-size:0.8rem;color:white"><i class="fa-solid fa-check"></i> Pay at delivery</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:0.75rem">
+                            <button class="btn btn-ghost" onclick="prevStep()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                            <button class="btn btn-accent btn-lg" onclick="placeOrder()" id="place-order-btn" style="flex:1">
+                                <i class="fa-solid fa-check-circle"></i> Place Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Mini Cart Summary -->
+            <div>
+                <div class="checkout-card" style="position:sticky;top:calc(var(--nav-height) + 1rem)">
+                    <h3 style="font-size:0.9rem"><i class="fa-solid fa-cart-shopping" style="color:var(--primary)"></i> Your Cart</h3>
+                    <div id="mini-cart" style="font-size:0.8rem;color:var(--text-muted)">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/checkout.js"></script>
+<script>
+initCheckout().then(() => {
+    // Mini cart
+    const mini = document.getElementById('mini-cart');
+    if (cartData?.items && mini) {
+        const subtotal = cartData.subtotal || 0;
+        const delivery = subtotal > 499 ? 0 : 49;
+        mini.innerHTML = cartData.items.map(i => `<div class="flex-between" style="padding:0.375rem 0;border-bottom:1px solid var(--divider)"><span>${i.productName} × ${i.quantity}</span><span style="font-weight:600">₹${parseFloat(i.itemTotal).toFixed(2)}</span></div>`).join('') +
+        `<div class="flex-between" style="margin-top:0.75rem;font-weight:700;font-size:0.9rem"><span>Total</span><span style="color:var(--primary)">₹${(parseFloat(subtotal)+delivery).toFixed(2)}</span></div>`;
+    }
+});
+</script>
+</body>
+</html>

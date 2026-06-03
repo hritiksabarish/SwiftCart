@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart — Admin: Orders</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="sidebar-user"><div class="sidebar-avatar" style="background:linear-gradient(135deg,#E65100,#FF6F00)">A</div><div class="sidebar-user-info"><h4>Admin Panel</h4><span>SwiftCart</span></div></div></div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard.html" class="sidebar-link"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a href="/admin/products.html" class="sidebar-link"><i class="fa-solid fa-boxes-stacked"></i> Products</a>
+            <a href="/admin/categories.html" class="sidebar-link"><i class="fa-solid fa-tags"></i> Categories</a>
+            <a href="/admin/orders.html" class="sidebar-link active" style="position:relative"><i class="fa-solid fa-cart-arrow-down"></i> Orders</a>
+            <a href="/admin/users.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Customers</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/index.html" class="sidebar-link"><i class="fa-solid fa-store"></i> View Store</a>
+            <div class="sidebar-link danger" onclick="logout()" style="cursor:pointer"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="page-header"><h1>Order Management</h1><p>Process and track all customer orders</p></div>
+
+        <div class="filter-tabs" style="margin-bottom:1.5rem">
+            <button class="filter-tab active" onclick="filterOrders('', this)">All Orders</button>
+            <button class="filter-tab" onclick="filterOrders('PENDING', this)">⏳ Pending</button>
+            <button class="filter-tab" onclick="filterOrders('CONFIRMED', this)">✅ Confirmed</button>
+            <button class="filter-tab" onclick="filterOrders('PROCESSING', this)">⚙️ Processing</button>
+            <button class="filter-tab" onclick="filterOrders('SHIPPED', this)">🚚 Shipped</button>
+            <button class="filter-tab" onclick="filterOrders('DELIVERED', this)">✨ Delivered</button>
+            <button class="filter-tab" onclick="filterOrders('CANCELLED', this)">❌ Cancelled</button>
+        </div>
+
+        <div class="dashboard-table-card">
+            <div id="orders-table-container"></div>
+        </div>
+        <div id="pagination" class="pagination"></div>
+
+        <!-- Status Update Modal -->
+        <div id="status-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center">
+            <div style="background:white;border-radius:var(--radius-md);padding:2rem;width:100%;max-width:420px">
+                <h3 style="font-weight:700;margin-bottom:1.25rem">Update Order Status</h3>
+                <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem">Order #<strong id="modal-order-id"></strong></p>
+                <div class="form-group" style="margin-bottom:1.25rem">
+                    <label class="form-label">New Status</label>
+                    <select class="form-control" id="new-status">
+                        <option value="PENDING">Pending</option>
+                        <option value="CONFIRMED">Confirmed</option>
+                        <option value="PROCESSING">Processing</option>
+                        <option value="SHIPPED">Shipped</option>
+                        <option value="DELIVERED">Delivered</option>
+                        <option value="CANCELLED">Cancelled</option>
+                    </select>
+                </div>
+                <div style="display:flex;gap:0.75rem">
+                    <button class="btn btn-primary" onclick="confirmStatusUpdate()" id="status-update-btn">Update</button>
+                    <button class="btn btn-ghost" onclick="document.getElementById('status-modal').style.display='none'">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireAdmin();
+
+let currentFilter = '';
+let currentPage = 0;
+let totalPages = 0;
+let updatingOrderId = null;
+
+async function loadOrders() {
+    document.getElementById('orders-table-container').innerHTML = `<div class="page-loading" style="min-height:200px"><div class="spinner spinner-green"></div></div>`;
+    try {
+        const qp = currentFilter ? `?status=${currentFilter}&page=${currentPage}&size=12` : `?page=${currentPage}&size=12`;
+        const res = await api.get(`/admin/orders${qp}`);
+        const data = res.data;
+        totalPages = data.totalPages;
+        const orders = data.content || [];
+
+        if (!orders.length) {
+            document.getElementById('orders-table-container').innerHTML = `<div class="empty-state"><h3>No orders found</h3></div>`;
+            return;
+        }
+
+        document.getElementById('orders-table-container').innerHTML = `
+        <div class="table-wrapper" style="border:none;border-radius:0">
+        <table>
+            <thead><tr>
+                <th>Order ID</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th><th>Actions</th>
+            </tr></thead>
+            <tbody>${orders.map(o => `<tr>
+                <td style="font-weight:700;color:var(--primary)">#${o.id}</td>
+                <td>
+                    <div style="font-weight:600;font-size:0.875rem">${o.userName||'N/A'}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted)">${o.userEmail||''}</div>
+                </td>
+                <td style="font-size:0.8rem">${formatDateTime(o.createdAt)}</td>
+                <td style="font-weight:700">₹${parseFloat(o.finalAmount).toFixed(2)}</td>
+                <td>${getStatusBadge(o.orderStatus)}</td>
+                <td><span class="badge badge-muted" style="font-size:0.7rem">${o.paymentMethod?.replace('_',' ')||'COD'}</span></td>
+                <td>
+                    <div style="display:flex;gap:0.375rem">
+                        <a href="/admin/order-detail.html?id=${o.id}" class="btn btn-ghost btn-sm" title="View"><i class="fa-solid fa-eye"></i></a>
+                        <button class="btn btn-outline btn-sm" onclick="openStatusModal(${o.id}, '${o.orderStatus}')" title="Update status">
+                            <i class="fa-solid fa-pen"></i> Status
+                        </button>
+                    </div>
+                </td>
+            </tr>`).join('')}</tbody>
+        </table></div>`;
+        renderPagination();
+    } catch(e) { document.getElementById('orders-table-container').innerHTML = `<p class="text-muted" style="padding:1rem">Error: ${e.message}</p>`; }
+}
+
+function renderPagination() {
+    const c = document.getElementById('pagination');
+    if (totalPages <= 1) { c.innerHTML = ''; return; }
+    let h = `<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage===0?'disabled':''}><i class="fa-solid fa-chevron-left"></i></button>`;
+    for (let i = 0; i < totalPages; i++) h += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goToPage(${i})">${i+1}</button>`;
+    h += `<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage===totalPages-1?'disabled':''}><i class="fa-solid fa-chevron-right"></i></button>`;
+    c.innerHTML = h;
+}
+
+function goToPage(page) { if (page < 0 || page >= totalPages) return; currentPage = page; loadOrders(); }
+function filterOrders(status, btn) {
+    currentFilter = status; currentPage = 0;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    loadOrders();
+}
+
+function openStatusModal(orderId, currentStatus) {
+    updatingOrderId = orderId;
+    document.getElementById('modal-order-id').textContent = orderId;
+    document.getElementById('new-status').value = currentStatus;
+    document.getElementById('status-modal').style.display = 'flex';
+}
+
+async function confirmStatusUpdate() {
+    const newStatus = document.getElementById('new-status').value;
+    const btn = document.getElementById('status-update-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner spinner-sm"></span>';
+    try {
+        await api.put(`/admin/orders/${updatingOrderId}/status`, { status: newStatus });
+        showToast('Order status updated!', 'success');
+        document.getElementById('status-modal').style.display = 'none';
+        loadOrders();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = 'Update'; }
+}
+
+// URL param for initial filter
+const urlStatus = new URLSearchParams(window.location.search).get('status');
+if (urlStatus) {
+    currentFilter = urlStatus;
+    document.querySelectorAll('.filter-tab').forEach(t => {
+        if (t.textContent.includes(urlStatus)) { t.classList.add('active'); document.querySelector('.filter-tab:first-child').classList.remove('active'); }
+    });
+}
+
+loadOrders();
+</script>
+</body>
+</html>

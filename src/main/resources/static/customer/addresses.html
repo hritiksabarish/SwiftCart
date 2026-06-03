@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart — My Addresses</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="sidebar-user"><div class="sidebar-avatar" id="sidebar-avatar">?</div><div class="sidebar-user-info"><h4 id="sidebar-name">...</h4></div></div></div>
+        <nav class="sidebar-nav">
+            <a href="/customer/dashboard.html" class="sidebar-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+            <a href="/customer/orders.html" class="sidebar-link"><i class="fa-solid fa-box-open"></i> My Orders</a>
+            <a href="/customer/wishlist.html" class="sidebar-link"><i class="fa-regular fa-heart"></i> Wishlist</a>
+            <a href="/customer/profile.html" class="sidebar-link"><i class="fa-solid fa-user"></i> Profile</a>
+            <a href="/customer/addresses.html" class="sidebar-link active" style="position:relative"><i class="fa-solid fa-location-dot"></i> Addresses</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/products.html" class="sidebar-link"><i class="fa-solid fa-store"></i> Browse Store</a>
+            <div class="sidebar-link danger" onclick="logout()" style="cursor:pointer"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="flex-between" style="margin-bottom:1.5rem">
+            <div class="page-header" style="margin-bottom:0"><h1>My Addresses</h1><p>Manage your delivery addresses</p></div>
+            <button class="btn btn-primary btn-sm" onclick="toggleForm()" id="add-btn">
+                <i class="fa-solid fa-plus"></i> Add Address
+            </button>
+        </div>
+
+        <!-- Add Address Form -->
+        <div class="card hidden" id="address-form" style="padding:1.5rem;margin-bottom:1.5rem">
+            <h3 style="font-weight:700;margin-bottom:1.25rem" id="form-title">Add New Address</h3>
+            <input type="hidden" id="edit-id">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="form-group">
+                    <label class="form-label">Label</label>
+                    <select class="form-control" id="f-label">
+                        <option value="Home">🏠 Home</option>
+                        <option value="Work">🏢 Work</option>
+                        <option value="Other">📍 Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pincode <span>*</span></label>
+                    <input type="text" class="form-control" id="f-pincode" placeholder="6-digit pincode" maxlength="6">
+                </div>
+            </div>
+            <div class="form-group" style="margin-top:1rem">
+                <label class="form-label">Street Address <span>*</span></label>
+                <input type="text" class="form-control" id="f-street" placeholder="House/Flat no., Building, Street">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
+                <div class="form-group">
+                    <label class="form-label">City <span>*</span></label>
+                    <input type="text" class="form-control" id="f-city" placeholder="City">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State <span>*</span></label>
+                    <input type="text" class="form-control" id="f-state" placeholder="State">
+                </div>
+            </div>
+            <div class="form-group" style="margin-top:1rem">
+                <label class="form-label">Landmark (Optional)</label>
+                <input type="text" class="form-control" id="f-landmark" placeholder="Near bus stop, school, etc.">
+            </div>
+            <div class="custom-check" style="margin-top:1rem">
+                <input type="checkbox" id="f-default">
+                <label for="f-default">Set as default address</label>
+            </div>
+            <div style="display:flex;gap:0.75rem;margin-top:1.25rem">
+                <button class="btn btn-primary" onclick="saveAddress()" id="save-btn"><i class="fa-solid fa-save"></i> Save</button>
+                <button class="btn btn-ghost" onclick="toggleForm()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Addresses List -->
+        <div id="addresses-list"><div class="page-loading"><div class="spinner spinner-green"></div></div></div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireCustomer();
+const user = getUserInfo();
+document.getElementById('sidebar-name').textContent = user?.name || 'Customer';
+document.getElementById('sidebar-avatar').textContent = (user?.name||'C')[0].toUpperCase();
+
+function toggleForm(addr = null) {
+    const form = document.getElementById('address-form');
+    form.classList.toggle('hidden');
+    if (addr) {
+        document.getElementById('form-title').textContent = 'Edit Address';
+        document.getElementById('edit-id').value = addr.id;
+        document.getElementById('f-label').value = addr.label || 'Home';
+        document.getElementById('f-street').value = addr.street;
+        document.getElementById('f-city').value = addr.city;
+        document.getElementById('f-state').value = addr.state;
+        document.getElementById('f-pincode').value = addr.pincode;
+        document.getElementById('f-landmark').value = addr.landmark || '';
+        document.getElementById('f-default').checked = addr.isDefault;
+    } else {
+        document.getElementById('form-title').textContent = 'Add New Address';
+        document.getElementById('edit-id').value = '';
+        ['f-street','f-city','f-state','f-pincode','f-landmark'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('f-default').checked = false;
+    }
+}
+
+async function loadAddresses() {
+    try {
+        const res = await api.get('/addresses');
+        const addresses = res.data || [];
+        const container = document.getElementById('addresses-list');
+        if (!addresses.length) {
+            container.innerHTML = `<div class="empty-state">
+                <div class="empty-state-icon"><i class="fa-solid fa-location-dot"></i></div>
+                <h3>No addresses saved</h3><p>Add an address for faster checkout</p>
+            </div>`;
+            return;
+        }
+        container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem">
+            ${addresses.map(a => `
+            <div class="card animate-fade-in" style="padding:1.25rem;border:${a.isDefault ? '2px solid var(--primary-light)' : '1px solid var(--border)'}">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between">
+                    <div>
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+                            <span style="font-weight:700">${a.label || 'Address'}</span>
+                            ${a.isDefault ? '<span class="badge badge-primary" style="font-size:0.65rem">DEFAULT</span>' : ''}
+                        </div>
+                        <div style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7">
+                            ${a.street}<br>${a.city}, ${a.state} - ${a.pincode}
+                            ${a.landmark ? `<br><span style="font-size:0.8rem;color:var(--text-muted)">Landmark: ${a.landmark}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap">
+                    <button class="btn btn-ghost btn-sm" onclick='toggleForm(${JSON.stringify(a)})'>
+                        <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    ${!a.isDefault ? `<button class="btn btn-ghost btn-sm" onclick="setDefault(${a.id})">
+                        <i class="fa-solid fa-star"></i> Set Default
+                    </button>` : ''}
+                    <button class="btn btn-sm" style="background:#ffebee;color:var(--error);border:1px solid #ffcdd2" onclick="deleteAddress(${a.id})">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>`).join('')}
+        </div>`;
+    } catch(e) { showToast('Error loading addresses', 'error'); }
+}
+
+async function saveAddress() {
+    const id = document.getElementById('edit-id').value;
+    const body = {
+        label: document.getElementById('f-label').value,
+        street: document.getElementById('f-street').value.trim(),
+        city: document.getElementById('f-city').value.trim(),
+        state: document.getElementById('f-state').value.trim(),
+        pincode: document.getElementById('f-pincode').value.trim(),
+        landmark: document.getElementById('f-landmark').value.trim(),
+        isDefault: document.getElementById('f-default').checked
+    };
+    if (!body.street || !body.city || !body.state || !body.pincode) { showToast('Please fill all required fields', 'warning'); return; }
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner spinner-sm"></span> Saving...';
+    try {
+        if (id) await api.put(`/addresses/${id}`, body);
+        else await api.post('/addresses', body);
+        showToast('Address saved!', 'success');
+        document.getElementById('address-form').classList.add('hidden');
+        loadAddresses();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-save"></i> Save'; }
+}
+
+async function deleteAddress(id) {
+    if (!confirm('Delete this address?')) return;
+    try { await api.delete(`/addresses/${id}`); showToast('Address deleted', 'info'); loadAddresses(); }
+    catch(e) { showToast(e.message, 'error'); }
+}
+
+async function setDefault(id) {
+    try { await api.put(`/addresses/${id}/default`); showToast('Default address updated', 'success'); loadAddresses(); }
+    catch(e) { showToast(e.message, 'error'); }
+}
+
+loadAddresses();
+</script>
+</body>
+</html>

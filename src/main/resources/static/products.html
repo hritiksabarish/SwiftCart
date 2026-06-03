@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart - Product Catalog | Fresh Groceries Online</title>
+    <meta name="description" content="Browse 1000+ fresh groceries, fruits, vegetables, dairy and more at SwiftCart. Fast delivery guaranteed.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .products-layout { display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; padding-top: 2rem; padding-bottom: 3rem; }
+        .filter-sidebar { background: white; border-radius: var(--radius-md); border: 1px solid var(--border); padding: 1.25rem; height: fit-content; position: sticky; top: calc(var(--nav-height) + 1rem); }
+        .filter-section { padding-bottom: 1.25rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--divider); }
+        .filter-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .filter-section-title { font-weight: 700; font-size: 0.875rem; color: var(--text-primary); margin-bottom: 0.875rem; display: flex; align-items: center; gap: 0.5rem; }
+        .filter-section-title i { color: var(--primary); }
+        .products-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; }
+        .results-count { font-size: 0.875rem; color: var(--text-muted); }
+        .sort-select { height: 38px; padding: 0 0.875rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 0.875rem; background: white; cursor: pointer; min-width: 160px; }
+        .view-toggle { display: flex; gap: 0.25rem; }
+        .view-btn { width: 34px; height: 34px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); background: white; font-size: 0.875rem; transition: var(--transition-fast); }
+        .view-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        @media (max-width: 1200px) { .products-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 1024px) { .products-layout { grid-template-columns: 1fr; } .filter-sidebar { position: static; } .products-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 640px) { .products-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; } }
+        .price-range-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.375rem; }
+        .search-filter { position: relative; margin-bottom: 1rem; }
+        .search-filter input { width: 100%; height: 40px; padding: 0 1rem 0 2.5rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 0.875rem; }
+        .search-filter i { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.875rem; }
+        .filter-mobile-toggle { display: none; }
+        @media (max-width: 1024px) { .filter-mobile-toggle { display: flex; } }
+    </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<div class="page-wrapper">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav style="padding: 1rem 0 0; font-size: 0.8rem; color: var(--text-muted)">
+            <a href="/index.html" style="color: var(--text-muted)">Home</a>
+            <span style="margin: 0 0.375rem">/</span>
+            <span style="color: var(--primary)" id="breadcrumb-current">All Products</span>
+        </nav>
+
+        <div class="products-layout">
+            <!-- Filter Sidebar -->
+            <aside class="filter-sidebar" id="filter-sidebar">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                    <h3 style="font-size:1rem;font-weight:700">Filters</h3>
+                    <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear All</button>
+                </div>
+
+                <!-- Search -->
+                <div class="search-filter">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-filter-input" placeholder="Search products..."
+                           oninput="debounce(applyFilter, 400)()">
+                </div>
+
+                <!-- Categories -->
+                <div class="filter-section">
+                    <div class="filter-section-title"><i class="fa-solid fa-tag"></i> Categories</div>
+                    <div id="category-filter" style="display:flex;flex-direction:column;gap:0.5rem">
+                        <div class="skeleton" style="height:18px;border-radius:4px"></div>
+                        <div class="skeleton" style="height:18px;border-radius:4px"></div>
+                        <div class="skeleton" style="height:18px;border-radius:4px"></div>
+                        <div class="skeleton" style="height:18px;border-radius:4px"></div>
+                    </div>
+                </div>
+
+                <!-- In Stock -->
+                <div class="filter-section">
+                    <div class="filter-section-title"><i class="fa-solid fa-boxes-stacked"></i> Availability</div>
+                    <div class="custom-check">
+                        <input type="checkbox" id="in-stock" onchange="applyFilter()">
+                        <label for="in-stock">In Stock Only</label>
+                    </div>
+                </div>
+
+                <!-- Price Range -->
+                <div class="filter-section">
+                    <div class="filter-section-title"><i class="fa-solid fa-indian-rupee-sign"></i> Price Range</div>
+                    <input type="range" id="price-max" class="range-slider" min="0" max="1000" value="1000" step="10"
+                           oninput="document.getElementById('price-display').textContent='₹0 — ₹'+this.value">
+                    <div class="price-range-labels">
+                        <span>₹0</span>
+                        <span id="price-display">₹0 — ₹1000</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Products Area -->
+            <div>
+                <div class="products-header">
+                    <span class="results-count" id="results-count">Loading...</span>
+                    <div style="display:flex;align-items:center;gap:0.75rem">
+                        <select class="sort-select" id="sort-select" onchange="applyFilter()">
+                            <option value="createdAt-desc">Newest First</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                        </select>
+                        <div class="view-toggle">
+                            <button class="view-btn active" id="grid-btn" onclick="setView('grid')" title="Grid view">
+                                <i class="fa-solid fa-grid-2"></i>
+                            </button>
+                            <button class="view-btn" id="list-btn" onclick="setView('list')" title="List view">
+                                <i class="fa-solid fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="products-grid" id="products-grid"></div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="footer-placeholder"></div>
+<script src="/js/api.js"></script>
+<script>
+function setView(type) {
+    const grid = document.getElementById('products-grid');
+    document.getElementById('grid-btn')?.classList.toggle('active', type === 'grid');
+    document.getElementById('list-btn')?.classList.toggle('active', type === 'list');
+    if (type === 'list') grid.style.gridTemplateColumns = '1fr';
+    else grid.style.gridTemplateColumns = '';
+}
+function clearFilters() {
+    window.location.href = '/products.html';
+}
+// Set breadcrumb from URL
+const urlP = new URLSearchParams(window.location.search);
+if (urlP.get('q')) document.getElementById('breadcrumb-current').textContent = `Search: "${urlP.get('q')}"`;
+else if (urlP.get('featured')) document.getElementById('breadcrumb-current').textContent = 'Featured Deals';
+// buildNavbar() is called automatically by api.js DOMContentLoaded — no manual call needed
+</script>
+<script src="/js/products.js"></script>
+</body>
+</html>

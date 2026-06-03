@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart — Order Detail</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="sidebar-user"><div class="sidebar-avatar" id="sidebar-avatar">?</div><div class="sidebar-user-info"><h4 id="sidebar-name">...</h4></div></div></div>
+        <nav class="sidebar-nav">
+            <a href="/customer/dashboard.html" class="sidebar-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+            <a href="/customer/orders.html" class="sidebar-link active" style="position:relative"><i class="fa-solid fa-box-open"></i> My Orders</a>
+            <a href="/customer/wishlist.html" class="sidebar-link"><i class="fa-regular fa-heart"></i> Wishlist</a>
+            <a href="/customer/profile.html" class="sidebar-link"><i class="fa-solid fa-user"></i> Profile</a>
+            <a href="/customer/addresses.html" class="sidebar-link"><i class="fa-solid fa-location-dot"></i> Addresses</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/products.html" class="sidebar-link"><i class="fa-solid fa-store"></i> Browse Store</a>
+            <div class="sidebar-link danger" onclick="logout()" style="cursor:pointer"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+            <a href="/customer/orders.html" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
+            <h1 style="font-size:1.4rem;font-weight:700;margin:0">Order Detail</h1>
+        </div>
+        <div id="order-detail-content"><div class="page-loading"><div class="spinner spinner-green"></div></div></div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireCustomer();
+const user = getUserInfo();
+document.getElementById('sidebar-name').textContent = user?.name || 'Customer';
+document.getElementById('sidebar-avatar').textContent = (user?.name||'C')[0].toUpperCase();
+
+async function loadOrderDetail() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (!id) { window.location.href = '/customer/orders.html'; return; }
+    try {
+        const res = await api.get(`/orders/${id}`);
+        const o = res.data;
+        const statusSteps = ['PENDING','CONFIRMED','PROCESSING','SHIPPED','DELIVERED'];
+        const currentIdx = statusSteps.indexOf(o.orderStatus);
+
+        document.getElementById('order-detail-content').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:1.5rem">
+            <div>
+                <!-- Order Status -->
+                <div class="card" style="padding:1.5rem;margin-bottom:1.25rem">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.5rem">
+                        <h3>Order #${o.id} ${getStatusBadge(o.orderStatus)}</h3>
+                        <span style="font-size:0.8rem;color:var(--text-muted)">${formatDateTime(o.createdAt)}</span>
+                    </div>
+                    <!-- Timeline -->
+                    <div class="order-timeline">
+                        ${statusSteps.map((step, i) => {
+                            const done = i <= currentIdx && o.orderStatus !== 'CANCELLED';
+                            return `<div class="timeline-item">
+                                ${i < statusSteps.length - 1 ? `<div class="timeline-connector ${done && i < currentIdx ? 'done' : ''}"></div>` : ''}
+                                <div class="timeline-dot ${done ? 'done' : 'pending'}"><i class="fa-solid ${['fa-clock','fa-check','fa-gear','fa-truck','fa-house-circle-check'][i]}"></i></div>
+                                <div class="timeline-content">
+                                    <h4>${step.charAt(0) + step.slice(1).toLowerCase()}</h4>
+                                    <p>${done ? (i < currentIdx ? 'Completed' : 'Current status') : 'Pending'}</p>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                        ${o.orderStatus === 'CANCELLED' ? `<div class="timeline-item">
+                            <div class="timeline-dot" style="background:#ffebee;color:var(--error)"><i class="fa-solid fa-xmark"></i></div>
+                            <div class="timeline-content"><h4 style="color:var(--error)">Cancelled</h4><p>Order was cancelled</p></div>
+                        </div>` : ''}
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="card" style="padding:1.5rem">
+                    <h3 style="font-weight:700;margin-bottom:1.25rem">Items Ordered</h3>
+                    ${(o.orderItems || []).map(item => `
+                    <div style="display:flex;gap:1rem;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--divider)">
+                        <div style="width:60px;height:60px;border-radius:var(--radius-sm);overflow:hidden;background:var(--bg);flex-shrink:0">
+                            <img src="${item.productImage||'https://via.placeholder.com/60'}" alt="" style="width:100%;height:100%;object-fit:cover">
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-weight:600;font-size:0.875rem">${item.productName}</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted)">${item.brand||''} • ${item.unit||''}</div>
+                            <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:0.25rem">Qty: ${item.quantity} × ₹${parseFloat(item.unitPrice).toFixed(2)}</div>
+                        </div>
+                        <div style="font-weight:700">₹${parseFloat(item.subtotal).toFixed(2)}</div>
+                    </div>`).join('')}
+                    <div style="margin-top:0.875rem;display:flex;flex-direction:column;gap:0.5rem;padding-top:0.5rem">
+                        <div class="flex-between" style="font-size:0.875rem"><span style="color:var(--text-secondary)">Subtotal</span><span>₹${parseFloat(o.totalAmount).toFixed(2)}</span></div>
+                        <div class="flex-between" style="font-size:0.875rem"><span style="color:var(--text-secondary)">Discount</span><span style="color:var(--primary)">-₹${parseFloat(o.discountAmount||0).toFixed(2)}</span></div>
+                        <div class="flex-between" style="font-weight:700;font-size:1rem;border-top:1px solid var(--divider);padding-top:0.5rem"><span>Total</span><span style="color:var(--primary)">₹${parseFloat(o.finalAmount).toFixed(2)}</span></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <!-- Delivery Info -->
+                <div class="card" style="padding:1.25rem;margin-bottom:1.25rem">
+                    <h4 style="font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-location-dot" style="color:var(--primary)"></i> Delivery Address</h4>
+                    ${o.address ? `<div style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7">
+                        <div style="font-weight:600;color:var(--text-primary)">${o.address.label || 'Address'}</div>
+                        ${o.address.street}, ${o.address.city}, ${o.address.state} - ${o.address.pincode}
+                        ${o.address.landmark ? `<br>Landmark: ${o.address.landmark}` : ''}
+                    </div>` : '<p style="color:var(--text-muted);font-size:0.875rem">No address info</p>'}
+                </div>
+                <!-- Payment Info -->
+                <div class="card" style="padding:1.25rem;margin-bottom:1.25rem">
+                    <h4 style="font-weight:700;margin-bottom:1rem"><i class="fa-solid fa-wallet" style="color:var(--primary)"></i> Payment</h4>
+                    <div style="font-size:0.875rem;color:var(--text-secondary)">
+                        <div><strong>Method:</strong> ${o.paymentMethod?.replace('_',' ')||'Cash on Delivery'}</div>
+                        <div style="margin-top:0.375rem"><strong>Status:</strong> ${getStatusBadge(o.paymentStatus||'PENDING')}</div>
+                        <div style="margin-top:0.375rem"><strong>Amount:</strong> ₹${parseFloat(o.finalAmount).toFixed(2)}</div>
+                    </div>
+                </div>
+                ${o.orderStatus === 'PENDING' ? `
+                <button class="btn btn-block" style="background:#ffebee;color:var(--error);border:1px solid #ffcdd2" onclick="cancelOrder(${o.id})">
+                    <i class="fa-solid fa-xmark"></i> Cancel Order
+                </button>` : ''}
+            </div>
+        </div>`;
+    } catch(e) {
+        document.getElementById('order-detail-content').innerHTML = `<p class="text-muted">Error: ${e.message}</p>`;
+    }
+}
+
+async function cancelOrder(id) {
+    if (!confirm('Cancel this order?')) return;
+    try {
+        await api.put(`/orders/${id}/cancel`);
+        showToast('Order cancelled', 'info');
+        loadOrderDetail();
+    } catch(e) { showToast(e.message, 'error'); }
+}
+
+loadOrderDetail();
+</script>
+</body>
+</html>

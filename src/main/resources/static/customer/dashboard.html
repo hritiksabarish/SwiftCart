@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart — My Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+                <div class="sidebar-user-info">
+                    <h4 id="sidebar-name">Loading...</h4>
+                    <span id="sidebar-email"></span>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Main</div>
+            <a href="/customer/dashboard.html" class="sidebar-link active" style="position:relative">
+                <i class="fa-solid fa-gauge"></i> Dashboard
+            </a>
+            <a href="/customer/orders.html" class="sidebar-link">
+                <i class="fa-solid fa-box-open"></i> My Orders
+            </a>
+            <a href="/customer/wishlist.html" class="sidebar-link">
+                <i class="fa-regular fa-heart"></i> Wishlist
+            </a>
+            <div class="sidebar-section-label">Account</div>
+            <a href="/customer/profile.html" class="sidebar-link">
+                <i class="fa-solid fa-user"></i> Profile
+            </a>
+            <a href="/customer/addresses.html" class="sidebar-link">
+                <i class="fa-solid fa-location-dot"></i> Addresses
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/products.html" class="sidebar-link"><i class="fa-solid fa-store"></i> Browse Store</a>
+            <div class="sidebar-link danger" onclick="logout()" style="cursor:pointer">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <div class="page-header">
+            <h1>Welcome back, <span id="welcome-name" style="color:var(--primary)">...</span>! 👋</h1>
+            <p>Here's an overview of your activity</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card green">
+                <div class="stat-icon"><i class="fa-solid fa-box-open"></i></div>
+                <div class="stat-label">Total Orders</div>
+                <div class="stat-value" id="stat-orders">-</div>
+                <div class="stat-sub"><i class="fa-solid fa-arrow-trend-up up"></i> All time</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+                <div class="stat-label">Pending Orders</div>
+                <div class="stat-value" id="stat-pending">-</div>
+                <div class="stat-sub">Awaiting delivery</div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                <div class="stat-label">Total Spent</div>
+                <div class="stat-value" id="stat-spent">-</div>
+                <div class="stat-sub">All time purchases</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-icon"><i class="fa-regular fa-heart"></i></div>
+                <div class="stat-label">Wishlist Items</div>
+                <div class="stat-value" id="stat-wishlist">-</div>
+                <div class="stat-sub">Saved for later</div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem">
+            <a href="/products.html" class="card" style="padding:1.25rem;text-align:center;cursor:pointer;text-decoration:none;transition:var(--transition)">
+                <div style="font-size:1.75rem;margin-bottom:0.5rem">🛒</div>
+                <div style="font-weight:600;font-size:0.875rem;color:var(--text-primary)">Shop Now</div>
+            </a>
+            <a href="/customer/orders.html" class="card" style="padding:1.25rem;text-align:center;cursor:pointer;text-decoration:none;transition:var(--transition)">
+                <div style="font-size:1.75rem;margin-bottom:0.5rem">📦</div>
+                <div style="font-weight:600;font-size:0.875rem;color:var(--text-primary)">My Orders</div>
+            </a>
+            <a href="/customer/wishlist.html" class="card" style="padding:1.25rem;text-align:center;cursor:pointer;text-decoration:none;transition:var(--transition)">
+                <div style="font-size:1.75rem;margin-bottom:0.5rem">❤️</div>
+                <div style="font-weight:600;font-size:0.875rem;color:var(--text-primary)">Wishlist</div>
+            </a>
+            <a href="/customer/profile.html" class="card" style="padding:1.25rem;text-align:center;cursor:pointer;text-decoration:none;transition:var(--transition)">
+                <div style="font-size:1.75rem;margin-bottom:0.5rem">👤</div>
+                <div style="font-weight:600;font-size:0.875rem;color:var(--text-primary)">Profile</div>
+            </a>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="dashboard-table-card">
+            <div class="card-header">
+                <h3>Recent Orders</h3>
+                <a href="/customer/orders.html" class="btn btn-ghost btn-sm">View All</a>
+            </div>
+            <div id="recent-orders-table">
+                <div class="page-loading" style="min-height:150px"><div class="spinner spinner-green"></div></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireCustomer();
+
+async function loadDashboard() {
+    const user = getUserInfo();
+    document.getElementById('sidebar-name').textContent = user?.name || 'User';
+    document.getElementById('sidebar-email').textContent = user?.email || '';
+    document.getElementById('sidebar-avatar').textContent = (user?.name || 'U')[0].toUpperCase();
+    document.getElementById('welcome-name').textContent = user?.name?.split(' ')[0] || 'there';
+
+    try {
+        const res = await api.get('/customer/dashboard/stats');
+        const s = res.data;
+        document.getElementById('stat-orders').textContent = s.totalOrders || 0;
+        document.getElementById('stat-pending').textContent = s.pendingOrders || 0;
+        document.getElementById('stat-spent').textContent = '₹' + parseFloat(s.totalSpent || 0).toFixed(0);
+        document.getElementById('stat-wishlist').textContent = s.wishlistItems || 0;
+    } catch(e) {}
+
+    try {
+        const res = await api.get('/orders?page=0&size=5');
+        const orders = res.data?.content || [];
+        const table = document.getElementById('recent-orders-table');
+        if (!orders.length) {
+            table.innerHTML = `<div class="empty-state" style="min-height:150px">
+                <div class="empty-state-icon"><i class="fa-solid fa-box"></i></div>
+                <h3>No orders yet</h3>
+                <p>Start shopping to see your orders here</p>
+            </div>`;
+            return;
+        }
+        table.innerHTML = `<div class="table-wrapper">
+        <table>
+            <thead><tr>
+                <th>Order ID</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody>${orders.map(o => `<tr>
+                <td style="font-weight:700;color:var(--primary)">#${o.id}</td>
+                <td>${formatDate(o.createdAt)}</td>
+                <td>${o.orderItems?.length || 0} item${(o.orderItems?.length||0)===1?'':'s'}</td>
+                <td style="font-weight:600">₹${parseFloat(o.finalAmount).toFixed(2)}</td>
+                <td>${getStatusBadge(o.orderStatus)}</td>
+                <td><a href="/customer/order-detail.html?id=${o.id}" class="btn btn-ghost btn-sm">View</a></td>
+            </tr>`).join('')}</tbody>
+        </table></div>`;
+    } catch(e) {}
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart — My Wishlist</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="sidebar-user"><div class="sidebar-avatar" id="sidebar-avatar">?</div><div class="sidebar-user-info"><h4 id="sidebar-name">...</h4></div></div></div>
+        <nav class="sidebar-nav">
+            <a href="/customer/dashboard.html" class="sidebar-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+            <a href="/customer/orders.html" class="sidebar-link"><i class="fa-solid fa-box-open"></i> My Orders</a>
+            <a href="/customer/wishlist.html" class="sidebar-link active" style="position:relative"><i class="fa-regular fa-heart"></i> Wishlist</a>
+            <a href="/customer/profile.html" class="sidebar-link"><i class="fa-solid fa-user"></i> Profile</a>
+            <a href="/customer/addresses.html" class="sidebar-link"><i class="fa-solid fa-location-dot"></i> Addresses</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/products.html" class="sidebar-link"><i class="fa-solid fa-store"></i> Browse Store</a>
+            <div class="sidebar-link danger" onclick="logout()" style="cursor:pointer"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="page-header"><h1>My Wishlist</h1><p>Products you've saved for later</p></div>
+        <div id="wishlist-grid" class="grid-4"></div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireCustomer();
+const user = getUserInfo();
+document.getElementById('sidebar-name').textContent = user?.name || 'Customer';
+document.getElementById('sidebar-avatar').textContent = (user?.name||'C')[0].toUpperCase();
+
+async function loadWishlist() {
+    document.getElementById('wishlist-grid').innerHTML = `<div class="page-loading" style="grid-column:1/-1"><div class="spinner spinner-green"></div></div>`;
+    try {
+        const res = await api.get('/wishlist');
+        const items = res.data || [];
+        if (!items.length) {
+            document.getElementById('wishlist-grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+                <div class="empty-state-icon"><i class="fa-regular fa-heart"></i></div>
+                <h3>Your wishlist is empty</h3>
+                <p>Save products you love for quick access later</p>
+                <a href="/products.html" class="btn btn-primary btn-sm" style="margin-top:0.5rem">Browse Products</a>
+            </div>`;
+            return;
+        }
+        document.getElementById('wishlist-grid').innerHTML = items.map(item => {
+            const p = item.product;
+            const effectivePrice = p.discountPrice || p.price;
+            const discount = p.discountPrice ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : 0;
+            return `
+            <div class="product-card animate-fade-in">
+                <div class="product-card-image">
+                    <a href="/product-detail.html?id=${p.id}">
+                        <img src="${p.imageUrl||'https://via.placeholder.com/300'}" alt="${p.name}" loading="lazy"
+                             onerror="this.src='https://via.placeholder.com/300'">
+                    </a>
+                    ${discount > 0 ? `<div class="product-badge">${discount}% OFF</div>` : ''}
+                    <button class="product-wishlist-btn active" onclick="removeFromWishlist(${p.id}, this)">
+                        <i class="fa-solid fa-heart"></i>
+                    </button>
+                </div>
+                <div class="product-card-body">
+                    <div class="product-brand">${p.brand||''}</div>
+                    <a href="/product-detail.html?id=${p.id}" class="product-name">${p.name}</a>
+                    <div class="product-unit">${p.unit||''}</div>
+                    <div class="product-price-row">
+                        <span class="product-price">₹${parseFloat(effectivePrice).toFixed(2)}</span>
+                        ${p.discountPrice ? `<span class="product-original-price">₹${parseFloat(p.price).toFixed(2)}</span>` : ''}
+                    </div>
+                </div>
+                <div class="product-card-footer">
+                    ${p.stockQuantity > 0
+                        ? `<button class="btn btn-primary" onclick="addToCart(${p.id})" id="cart-${p.id}">
+                            <i class="fa-solid fa-cart-plus"></i> Add to Cart</button>`
+                        : `<div class="out-of-stock-badge">Out of Stock</div>`}
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) { showToast('Error loading wishlist', 'error'); }
+}
+
+async function removeFromWishlist(productId, btn) {
+    btn.style.opacity = '0.4';
+    try {
+        await api.delete(`/wishlist/${productId}`);
+        showToast('Removed from wishlist', 'info');
+        loadWishlist();
+    } catch(e) { btn.style.opacity = '1'; showToast(e.message, 'error'); }
+}
+
+async function addToCart(productId) {
+    const btn = document.getElementById(`cart-${productId}`);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner spinner-sm"></span>';
+    btn.disabled = true;
+    try {
+        await api.post('/cart/add', { productId, quantity: 1 });
+        showToast('Added to cart!', 'success');
+        updateCartBadge();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { btn.innerHTML = orig; btn.disabled = false; }
+}
+
+loadWishlist();
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftCart — My Profile</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="sidebar-user"><div class="sidebar-avatar" id="sidebar-avatar">?</div><div class="sidebar-user-info"><h4 id="sidebar-name">...</h4></div></div></div>
+        <nav class="sidebar-nav">
+            <a href="/customer/dashboard.html" class="sidebar-link"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+            <a href="/customer/orders.html" class="sidebar-link"><i class="fa-solid fa-box-open"></i> My Orders</a>
+            <a href="/customer/wishlist.html" class="sidebar-link"><i class="fa-regular fa-heart"></i> Wishlist</a>
+            <a href="/customer/profile.html" class="sidebar-link active" style="position:relative"><i class="fa-solid fa-user"></i> Profile</a>
+            <a href="/customer/addresses.html" class="sidebar-link"><i class="fa-solid fa-location-dot"></i> Addresses</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/products.html" class="sidebar-link"><i class="fa-solid fa-store"></i> Browse Store</a>
+            <div class="sidebar-link danger" onclick="logout()" style="cursor:pointer"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <div class="page-header">
+            <h1>My Profile</h1>
+            <p>Manage your personal information</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:900px">
+            <!-- Edit Profile -->
+            <div class="card" style="padding:1.5rem">
+                <h3 style="font-weight:700;margin-bottom:1.25rem"><i class="fa-solid fa-user-pen" style="color:var(--primary);margin-right:0.5rem"></i>Personal Info</h3>
+                <div class="form-group" style="margin-bottom:1rem">
+                    <label class="form-label">Full Name</label>
+                    <div class="input-group"><i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" class="form-control" id="edit-name" placeholder="Your name">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:1rem">
+                    <label class="form-label">Email (Read-only)</label>
+                    <div class="input-group"><i class="fa-regular fa-envelope input-icon"></i>
+                        <input type="email" class="form-control" id="edit-email" disabled style="background:var(--bg);cursor:not-allowed">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:1.25rem">
+                    <label class="form-label">Phone Number</label>
+                    <div class="input-group"><i class="fa-solid fa-phone input-icon"></i>
+                        <input type="tel" class="form-control" id="edit-phone" placeholder="10-digit phone">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:1rem">
+                    <label class="form-label">Member Since</label>
+                    <input type="text" class="form-control" id="edit-since" disabled style="background:var(--bg);cursor:not-allowed">
+                </div>
+                <button class="btn btn-primary" onclick="updateProfile()" id="update-btn">
+                    <i class="fa-solid fa-save"></i> Save Changes
+                </button>
+            </div>
+
+            <!-- Change Password -->
+            <div class="card" style="padding:1.5rem">
+                <h3 style="font-weight:700;margin-bottom:1.25rem"><i class="fa-solid fa-lock" style="color:var(--accent);margin-right:0.5rem"></i>Change Password</h3>
+                <div class="form-group" style="margin-bottom:1rem">
+                    <label class="form-label">Current Password</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" class="form-control" id="curr-pass" placeholder="Current password">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:1rem">
+                    <label class="form-label">New Password</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" class="form-control" id="new-pass" placeholder="Min. 6 characters">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:1.25rem">
+                    <label class="form-label">Confirm New Password</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" class="form-control" id="conf-pass" placeholder="Repeat new password">
+                    </div>
+                </div>
+                <button class="btn btn-accent" onclick="changePassword()" id="pw-btn">
+                    <i class="fa-solid fa-key"></i> Update Password
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireCustomer();
+const user = getUserInfo();
+document.getElementById('sidebar-name').textContent = user?.name || 'Customer';
+document.getElementById('sidebar-avatar').textContent = (user?.name||'C')[0].toUpperCase();
+
+async function loadProfile() {
+    try {
+        const res = await api.get('/users/me');
+        const u = res.data;
+        document.getElementById('edit-name').value = u.name || '';
+        document.getElementById('edit-email').value = u.email || '';
+        document.getElementById('edit-phone').value = u.phone || '';
+        document.getElementById('edit-since').value = formatDate(u.createdAt);
+    } catch(e) { showToast('Error loading profile', 'error'); }
+}
+
+async function updateProfile() {
+    const btn = document.getElementById('update-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner spinner-sm"></span> Saving...';
+    try {
+        const res = await api.put('/users/me', {
+            name: document.getElementById('edit-name').value.trim(),
+            phone: document.getElementById('edit-phone').value.trim()
+        });
+        const updated = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        updated.name = res.data.name;
+        localStorage.setItem('userInfo', JSON.stringify(updated));
+        showToast('Profile updated!', 'success');
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-save"></i> Save Changes'; }
+}
+
+async function changePassword() {
+    const btn = document.getElementById('pw-btn');
+    const curr = document.getElementById('curr-pass').value;
+    const newP = document.getElementById('new-pass').value;
+    const conf = document.getElementById('conf-pass').value;
+    if (!curr || !newP || !conf) { showToast('Please fill all fields', 'warning'); return; }
+    if (newP !== conf) { showToast('New passwords do not match', 'error'); return; }
+    if (newP.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+    btn.disabled = true; btn.innerHTML = '<span class="spinner spinner-sm"></span> Updating...';
+    try {
+        await api.put('/users/me/password', { currentPassword: curr, newPassword: newP, confirmPassword: conf });
+        showToast('Password changed! Please login again.', 'success');
+        document.getElementById('curr-pass').value = '';
+        document.getElementById('new-pass').value = '';
+        document.getElementById('conf-pass').value = '';
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-key"></i> Update Password'; }
+}
+
+loadProfile();
+</script>
+</body>
+</html>
